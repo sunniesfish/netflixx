@@ -52,15 +52,51 @@ const Row = styled(motion.div)`
     width: 100%;
     position: absolute;
 `
-const Box = styled(motion.div)<{photo:string}>`
-    background-image: url(${props => props.photo? makeImgPath(props.photo, "w500") : ""});
+const Box = styled(motion.div)`
     background-size: cover;
-    background-position: center;
-    height: 200px;
+    background-position: center center;
     width: 100%;
+    overflow: hidden;
+    display: flex;
+    justify-content: center;
+    flex-direction: column;
+    img{
+        display: flex;
+        flex-grow: 1;
+        object-fit: cover;
+    }
+    &:first-child{
+        transform-origin: center left;
+    }
+    &:last-child{
+        transform-origin: center right;
+    }
 `
-
-const rowVarients = {
+const Info = styled(motion.div)`
+    margin: 0;
+    padding: 15px;
+    background-color: ${props => props.theme.black.lighter};
+    opacity: 0;
+    width: 100%;
+    h4{
+        text-align: center;
+        font-size: 18px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+`
+const infoVariants = {
+    hover:{
+        opacity: 1,
+        transition:{
+            delay:0.3,
+            duration:0.3,
+            type:"tween"
+        }
+    }
+}
+const rowVariants = {
     hidden:{
         x: window.outerWidth-5,
     },
@@ -71,7 +107,20 @@ const rowVarients = {
         x: -window.outerWidth+5,
     }
 }
-
+const BoxVariants = {
+    normal:{
+        scale:1,
+    },
+    hover:{
+        scale:1.3,
+        y: -80,
+        transition:{
+            delay:0.3,
+            duration:0.3,
+            type:"tween"
+        }
+    },
+}
 const offset = 6;
 
 function Home() {
@@ -110,7 +159,7 @@ function Home() {
                         onExitComplete={toggleLeaving}
                     >
                         <Row 
-                            variants={rowVarients} 
+                            variants={rowVariants} 
                             initial="hidden"
                             animate="visible"
                             exit="exit"
@@ -119,9 +168,22 @@ function Home() {
                         >
                             {data?.results
                                 .slice(1)
-                                .slice(offset*index, offset*index+offset)
+                                .slice(offset*index, offset*index+offset)       
                                 .map(movie => 
-                                    <Box key={movie.id} photo={movie.backdrop_path}/>
+                                    <Box 
+                                        key={movie.id} 
+                                        variants={BoxVariants}
+                                        initial="normal"
+                                        whileHover="hover"
+                                        transition={{type:"tween"}}
+                                    >
+                                        <img src={makeImgPath(movie.backdrop_path, "w500")} alt="poster"/>
+                                        <Info
+                                            variants={infoVariants}
+                                        >
+                                            <h4>{movie.title}</h4>
+                                        </Info>
+                                    </Box>
                                 )
                             }
                         </Row>
