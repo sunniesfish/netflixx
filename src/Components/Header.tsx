@@ -65,7 +65,7 @@ const Input = styled(motion.input)`
     padding-left: 30px;
     transform-origin: right center;
     position: absolute;
-    background-color: rgba(20, 20, 20, 20.4);
+    background-color: rgba(20, 20, 20, 0.1);
     border: none;
     outline: none;
     border-radius: 3px;
@@ -102,6 +102,14 @@ const navVarients = {
         backgroundColor: "rgba(0,0,0,1)"
     }
 }
+const inputVarients = {
+    top:{
+        backgroundColor: "rgba(20,20,20,0.1)"
+    },
+    scroll:{
+        backgroundColor: "rgba(20,20,20,1)"
+    }
+}
 function Header() {
     const [searchOpen, setSearchOpen] = useState(true);
     
@@ -128,9 +136,11 @@ function Header() {
     }
     useMotionValueEvent(scrollY, "change", (e)=>{
         if(e > 80){
-            navAnimation.start("scroll")
+            navAnimation.start("scroll");
+            inputAnimation.start("scroll");
         } else {
-            navAnimation.start("top")
+            navAnimation.start("top");
+            inputAnimation.start("top");
         }
     });
     return (
@@ -166,8 +176,9 @@ function Header() {
             <Col>
                 <Search>
                     <Input 
+                        variants={inputVarients}
                         animate={inputAnimation}
-                        initial={"top"} 
+                        initial={{backgroundColor:"rgba(20,20,20,0.1)"}} 
                         transition={{type:"linear"}}
                         placeholder="Search for movie or Tv Show..."
                     />
