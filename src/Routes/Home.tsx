@@ -98,13 +98,13 @@ const infoVariants = {
 }
 const rowVariants = {
     hidden:{
-        x: window.outerWidth-5,
+        x: "100vw",
     },
     visible:{
         x:0,
     },
     exit:{
-        x: -window.outerWidth+5,
+        x: "-100vw",
     }
 }
 const BoxVariants = {
