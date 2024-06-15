@@ -3,8 +3,9 @@ import { getMovies } from "../api";
 import { IGetMoviesResult } from "../interface";
 import styled from "styled-components";
 import { makeImgPath } from "../utils";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, motion, useScroll } from "framer-motion";
 import { useState } from "react";
+import { useMatch, useNavigate } from "react-router-dom";
 
 const Wrapper = styled.div`
     background-color: black;
@@ -39,7 +40,24 @@ const Overview = styled.p`
     -webkit-line-clamp: 3; /* 줄 수를 설정 */
     -webkit-box-orient: vertical;
 `
-
+const Overlay = styled(motion.div)`
+    position: fixed;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.5);
+    opacity: 0;
+`
+const BigMovie = styled(motion.div)`
+    position: fixed;
+    width: 40vw;
+    height: 80vh;
+    background-color: red;
+    top: 10vh;
+    left: 0;
+    right: 0;
+    margin: 0 auto;
+`
 const Slider = styled.div`
     position: relative;
     top: -150px;
@@ -60,6 +78,9 @@ const Box = styled(motion.div)`
     display: flex;
     justify-content: center;
     flex-direction: column;
+    &:hover{
+        cursor: pointer;
+    }
     img{
         display: flex;
         flex-grow: 1;
@@ -124,6 +145,10 @@ const BoxVariants = {
 const offset = 6;
 
 function Home() {
+    const navigate = useNavigate();
+    const bigMovieMatch = useMatch("/movies/:movieId");
+    const { scrollY } = useScroll();
+    console.log(scrollY)
     const { data, isLoading } = useQuery<IGetMoviesResult>(
         ["movies","nowPlaying"],
         getMovies
@@ -140,6 +165,12 @@ function Home() {
         }
     };
     const toggleLeaving = () => setLeaving(prev => !prev);
+    const onBoxClick = (movieId:number) => {
+        navigate(`/movies/${movieId}`);
+    }
+    const onOverlayClick = () => {
+        navigate("/");
+    }
     return(
         <Wrapper>
             {isLoading? 
@@ -171,6 +202,8 @@ function Home() {
                                 .slice(offset*index, offset*index+offset)       
                                 .map(movie => 
                                     <Box 
+                                        layoutId={movie.id+""}
+                                        onClick={()=>onBoxClick(movie.id)}
                                         key={movie.id} 
                                         variants={BoxVariants}
                                         initial="normal"
@@ -189,6 +222,24 @@ function Home() {
                         </Row>
                     </AnimatePresence>
                 </Slider>
+                <AnimatePresence>
+                    {bigMovieMatch? 
+                    <>
+                        <Overlay
+                            onClick={onOverlayClick}
+                            animate={{opacity:1}}
+                            exit={{opacity:0}}
+                        />
+                        <BigMovie
+                            layoutId={bigMovieMatch.params.movieId}
+                        >
+
+                        </BigMovie> 
+                    </>
+                    : 
+                    null
+                    }
+                </AnimatePresence>
             </>
             }
         </Wrapper>
