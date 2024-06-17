@@ -1,5 +1,5 @@
 import { motion, useAnimation, useMotionValueEvent, useScroll } from "framer-motion";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { Link, useMatch, useNavigate } from "react-router-dom";
 import styled from "styled-components";
