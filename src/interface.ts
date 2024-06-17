@@ -21,3 +21,10 @@ export interface IGetMoviesResult {
 export interface ISearchForm{
     keyword:string;
 }
+
+export interface ISearchQuery{
+    keyword:string,
+    adult?:boolean,
+    langauge?:string,
+    pageNo:number,
+}

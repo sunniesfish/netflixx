@@ -167,7 +167,6 @@ function Home() {
     const navigate = useNavigate();
     const bigMovieMatch = useMatch("/movies/:movieId");
     const { scrollY } = useScroll();
-    console.log(scrollY)
     const { data, isLoading } = useQuery<IGetMoviesResult>(
         ["movies","nowPlaying"],
         getMovies
