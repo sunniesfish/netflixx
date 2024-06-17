@@ -21,10 +21,9 @@ export async function getTvs() {
         .then(res => res.json());
 }
 
-export async function doSearch({keyword, adult, langauge, pageNo}:ISearchQuery){
-    return   fetch(
-        `${BASE_URL}/search/multi?query=${keyword}&include_adult=${adult? "true" : "false"}&language=${langauge? langauge : "en-US"}&page=${pageNo}`
+export async function doSearch({keyword, adult, langauge, pageNo, category}:ISearchQuery){
+    return fetch(
+        `${BASE_URL}/search/${category}?query=${keyword}&include_adult=${adult? "true" : "false"}&language=${langauge? langauge : "en-US"}&page=${pageNo}`
         , options)
     .then(response => response.json())
 }
-

@@ -1,6 +1,6 @@
 import { useQuery } from "react-query";
 import { getMovies } from "../api";
-import { IGetMoviesResult } from "../interface";
+import { IGetResult } from "../interface";
 import styled from "styled-components";
 import { makeImgPath } from "../utils";
 import { AnimatePresence, motion } from "framer-motion";
@@ -171,7 +171,7 @@ const offset = 6;
 function Home() {
     const navigate = useNavigate();
     const bigMovieMatch = useMatch("/movies/:movieId");
-    const { data, isLoading } = useQuery<IGetMoviesResult>(
+    const { data, isLoading } = useQuery<IGetResult>(
         ["movies","nowPlaying"],
         getMovies
     );

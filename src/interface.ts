@@ -1,37 +1,21 @@
-export interface IMovie{
+
+export interface IResult{
     id:number;
     backdrop_path:string;
     poster_path:string;
-    title:string;
+    name?:string;
+    title?:string;
     overview:string;
-
-}
-export interface ITv{
-    id:number;
-    backdrop_path:string;
-    poster_path:string;
-    name:string;
-    overview:string;
-
+    media_type:string;
 }
 
-export interface IGetMoviesResult {
+export interface IGetResult {
     dates: {
         maximum:string;
         minimum:string;
     };
     page:number;
-    results:IMovie[];
-    total_pages:number;
-    total_results:number;
-}
-export interface IGetTvResult {
-    dates: {
-        maximum:string;
-        minimum:string;
-    };
-    page:number;
-    results:ITv[];
+    results:IResult[];
     total_pages:number;
     total_results:number;
 }
@@ -41,6 +25,7 @@ export interface ISearchForm{
 }
 
 export interface ISearchQuery{
+    category:string;
     keyword:string,
     adult?:boolean,
     langauge?:string,

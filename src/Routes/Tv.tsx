@@ -1,6 +1,6 @@
 import { useQuery } from "react-query";
 import { getTvs } from "../api";
-import { IGetTvResult } from "../interface";
+import { IGetResult } from "../interface";
 import styled from "styled-components";
 import { makeImgPath } from "../utils";
 import { AnimatePresence, motion } from "framer-motion";
@@ -172,7 +172,7 @@ const offset = 6;
 function Tv() {
     const navigate = useNavigate();
     const bigTvMatch = useMatch("/tv/:tvId");
-    const { data, isLoading } = useQuery<IGetTvResult>(
+    const { data, isLoading } = useQuery<IGetResult>(
         ["tv","nowPlaying"],
         getTvs
     );
