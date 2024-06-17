@@ -6,6 +6,14 @@ export interface IMovie{
     overview:string;
 
 }
+export interface ITv{
+    id:number;
+    backdrop_path:string;
+    poster_path:string;
+    name:string;
+    overview:string;
+
+}
 
 export interface IGetMoviesResult {
     dates: {
@@ -14,6 +22,16 @@ export interface IGetMoviesResult {
     };
     page:number;
     results:IMovie[];
+    total_pages:number;
+    total_results:number;
+}
+export interface IGetTvResult {
+    dates: {
+        maximum:string;
+        minimum:string;
+    };
+    page:number;
+    results:ITv[];
     total_pages:number;
     total_results:number;
 }

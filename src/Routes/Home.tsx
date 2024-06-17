@@ -3,7 +3,7 @@ import { getMovies } from "../api";
 import { IGetMoviesResult } from "../interface";
 import styled from "styled-components";
 import { makeImgPath } from "../utils";
-import { AnimatePresence, motion, useScroll } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import { useState } from "react";
 import { useMatch, useNavigate } from "react-router-dom";
 
@@ -114,12 +114,17 @@ const Box = styled(motion.div)`
 `
 const Info = styled(motion.div)`
     margin: 0;
-    padding: 15px;
-    background-color: ${props => props.theme.black.lighter};
+    padding: 10px;
+    background: linear-gradient(
+        to bottom,
+        ${props => props.theme.black.darker},
+        black
+    );
     opacity: 0;
     width: 100%;
     h4{
         text-align: center;
+        font-weight: bold;
         font-size: 18px;
         white-space: nowrap;
         overflow: hidden;
@@ -166,7 +171,6 @@ const offset = 6;
 function Home() {
     const navigate = useNavigate();
     const bigMovieMatch = useMatch("/movies/:movieId");
-    const { scrollY } = useScroll();
     const { data, isLoading } = useQuery<IGetMoviesResult>(
         ["movies","nowPlaying"],
         getMovies
