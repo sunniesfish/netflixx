@@ -6,3 +6,4 @@
 - react-router-dom
 - framer-motion
 - react-query
+- react-hook-form
