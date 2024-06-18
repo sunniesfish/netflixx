@@ -1,11 +1,12 @@
 import { useQuery } from "react-query";
-import { getTvs } from "../api";
-import { IGetResult } from "../interface";
+import { getTrailerId, getTvs } from "../api";
+import { IGetResult, ITrailerResult } from "../interface";
 import styled from "styled-components";
 import { makeImgPath } from "../utils";
 import { AnimatePresence, motion } from "framer-motion";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useMatch, useNavigate } from "react-router-dom";
+import Trailer from "../Components/Trailer";
 
 const Wrapper = styled.div`
     background-color: black;
@@ -63,19 +64,34 @@ const BigCover = styled.div`
     background-position: center center;
     width: 100%;
     height: 400px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+`
+const BigInfo = styled.div`
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(transparent 10%, black, black);
 `
 const BigTitle = styled.h2`
+    margin-top: 300px;
     color: ${props => props.theme.white.lighter};
     padding: 20px;
-    font-size: 46px;
+    font-size: 36px;
     position: relative;
-    top: -80px;
 `
 const BigOverview = styled.p`
     padding: 20px;
+    max-height: 100px;
     position: relative;
-    top: -80px;
     color: ${props => props.theme.white.lighter};
+    overflow: hidden;
+    text-overflow: ellipsis;
 `
 const Slider = styled.div`
     position: relative;
@@ -178,6 +194,7 @@ function Tv() {
     );
     const [ index, setIndex ] = useState(0);
     const [ leaving, setLeaving ] = useState(false);
+    const [ trailerId, setTrailerId ] = useState<string|undefined>(undefined);
     const increaseIndex = () => {
         if(data){
             if(leaving) return
@@ -188,13 +205,23 @@ function Tv() {
         }
     };
     const toggleLeaving = () => setLeaving(prev => !prev);
-    const onBoxClick = (tvId:number) => {
+    const onBoxClick = async (tvId:number) => {
         navigate(`/tv/${tvId}`);
+        const response:ITrailerResult = await getTrailerId(tvId, "tv");
+        setTrailerId(response.results[0].key);
     }
     const onOverlayClick = () => {
         navigate("/tv");
     }
     const clickedTv = bigTvMatch?.params.tvId && data?.results.find(tv => tv.id+"" === bigTvMatch.params.tvId);
+    const [coverDimensions, setCoverDimensions] = useState({ width: "0px", height: "0px" });
+    useEffect(() => {
+        const coverElement = document.querySelector(".bigCover");
+        if (coverElement) {
+            const { offsetWidth, offsetHeight } = coverElement as HTMLDivElement;
+            setCoverDimensions({ width: `${offsetWidth}px`, height: `${offsetHeight}px` });
+        }
+    }, [bigTvMatch, data]);
     return (
         <Wrapper>
             {isLoading? 
@@ -259,12 +286,24 @@ function Tv() {
                         >
                             {clickedTv && <>
                                 <BigCover
+                                    className="bigCover"
                                     style={{backgroundImage:`linear-gradient(to top,black, transparent), url(${makeImgPath(clickedTv.backdrop_path,"w500")})`}}
-                                />
-                                <BigTitle>{clickedTv.name}</BigTitle>
-                                <BigOverview>
-                                    {clickedTv.overview}
-                                </BigOverview>
+                                >
+                                    {trailerId && 
+                                        <Trailer
+                                            height={coverDimensions.height}
+                                            width={coverDimensions.width} 
+                                            videoId={trailerId} 
+                                            onError={()=>setTrailerId(undefined)}
+                                        />
+                                    }
+                                </BigCover>
+                                <BigInfo>
+                                    <BigTitle>{clickedTv.name}</BigTitle>
+                                    <BigOverview>
+                                        {clickedTv.overview}
+                                    </BigOverview>
+                                </BigInfo>
                             </>}
                         </BigTv> 
                     </>

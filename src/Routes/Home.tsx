@@ -1,11 +1,12 @@
 import { useQuery } from "react-query";
-import { getMovies } from "../api";
-import { IGetResult } from "../interface";
+import { getMovies, getTrailerId } from "../api";
+import { IGetResult, ITrailerResult } from "../interface";
 import styled from "styled-components";
 import { makeImgPath } from "../utils";
 import { AnimatePresence, motion } from "framer-motion";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useMatch, useNavigate } from "react-router-dom";
+import Trailer from "../Components/Trailer";
 
 const Wrapper = styled.div`
     background-color: black;
@@ -51,31 +52,49 @@ const Overlay = styled(motion.div)`
 const BigMovie = styled(motion.div)`
     position: fixed;
     width: 40vw;
-    height: 80vh;
+    height: 70vh;
     top: 10vh;
     left: 0;
     right: 0;
     margin: 0 auto;
-    background-color: ${props => props.theme.black.lighter};
+    background-color: ${props => props.theme.black.veryDark};
+    &>*{
+        width: 100%;
+    }
 `
 const BigCover = styled.div`
     background-size: cover;
     background-position: center center;
     width: 100%;
     height: 400px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+`
+const BigInfo = styled.div`
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(transparent 10%, black, black);
 `
 const BigTitle = styled.h2`
+    margin-top: 300px;
     color: ${props => props.theme.white.lighter};
     padding: 20px;
-    font-size: 46px;
+    font-size: 36px;
     position: relative;
-    top: -80px;
 `
 const BigOverview = styled.p`
     padding: 20px;
+    max-height: 100px;
     position: relative;
-    top: -80px;
     color: ${props => props.theme.white.lighter};
+    overflow: hidden;
+    text-overflow: ellipsis;
 `
 const Slider = styled.div`
     position: relative;
@@ -167,7 +186,6 @@ const BoxVariants = {
     },
 }
 const offset = 6;
-
 function Home() {
     const navigate = useNavigate();
     const bigMovieMatch = useMatch("/movies/:movieId");
@@ -177,6 +195,7 @@ function Home() {
     );
     const [ index, setIndex ] = useState(0);
     const [ leaving, setLeaving ] = useState(false);
+    const [ trailerId, setTrailerId ] = useState<string|undefined>(undefined);
     const increaseIndex = () => {
         if(data){
             if(leaving) return
@@ -187,13 +206,24 @@ function Home() {
         }
     };
     const toggleLeaving = () => setLeaving(prev => !prev);
-    const onBoxClick = (movieId:number) => {
+    const onBoxClick = async (movieId:number) => {
         navigate(`/movies/${movieId}`);
+        const response:ITrailerResult = await getTrailerId(movieId, "movie");
+        setTrailerId(response.results[0]?.key? response.results[0].key : undefined);
     }
     const onOverlayClick = () => {
         navigate("/");
     }
     const clickedMovie = bigMovieMatch?.params.movieId && data?.results.find(movie => movie.id+"" === bigMovieMatch.params.movieId);
+    const [coverDimensions, setCoverDimensions] = useState({ width: "0px", height: "0px" });
+    useEffect(() => {
+        const coverElement = document.querySelector(".bigCover");
+        if (coverElement) {
+            const { offsetWidth, offsetHeight } = coverElement as HTMLDivElement;
+            setCoverDimensions({ width: `${offsetWidth}px`, height: `${offsetHeight}px` });
+        }
+    }, [bigMovieMatch, data]);
+
     return(
         <Wrapper>
             {isLoading? 
@@ -258,12 +288,24 @@ function Home() {
                         >
                             {clickedMovie && <>
                                 <BigCover
+                                    className="bigCover"
                                     style={{backgroundImage:`linear-gradient(to top,black, transparent), url(${makeImgPath(clickedMovie.backdrop_path,"w500")})`}}
-                                />
-                                <BigTitle>{clickedMovie.title}</BigTitle>
-                                <BigOverview>
-                                    {clickedMovie.overview}
-                                </BigOverview>
+                                >
+                                    {trailerId && 
+                                        <Trailer
+                                            height={coverDimensions.height}
+                                            width={coverDimensions.width} 
+                                            videoId={trailerId} 
+                                            onError={()=>setTrailerId(undefined)}
+                                        />
+                                    }
+                                </BigCover>
+                                <BigInfo>
+                                    <BigTitle>{clickedMovie.title}</BigTitle>
+                                    <BigOverview>
+                                        {clickedMovie.overview}
+                                    </BigOverview>
+                                </BigInfo>
                             </>}
                         </BigMovie> 
                     </>

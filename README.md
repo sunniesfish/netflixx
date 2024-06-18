@@ -7,3 +7,4 @@
 - framer-motion
 - react-query
 - react-hook-form
+- react-youtube

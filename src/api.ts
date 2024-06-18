@@ -27,3 +27,10 @@ export async function doSearch({keyword, adult, langauge, pageNo, category}:ISea
         , options)
     .then(response => response.json())
 }
+
+export async function getTrailerId(id:number,cat:string) {
+    return fetch(
+        `${BASE_URL}/${cat}/${id}/videos?language=en-US`
+        ,options)
+        .then(res => res.json())
+}

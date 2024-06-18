@@ -31,3 +31,18 @@ export interface ISearchQuery{
     langauge?:string,
     pageNo:number,
 }
+
+
+export interface ITrailerResult{
+    id:number,
+    results:ITrailer[]
+}
+
+export interface ITrailer{
+    id:number,
+    key:string,
+    name:string,
+    site:string,
+    size:number,
+    official:boolean
+}

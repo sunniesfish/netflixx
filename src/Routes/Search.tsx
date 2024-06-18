@@ -102,7 +102,6 @@ function Search() {
     const { data, isLoading } = useQuery<IGetResult>(
         ["search", keyword, pageNo, adult, category],() => doSearch({keyword, pageNo, adult, category})
     );
-    console.log(data)
     return (
         <Wrapper>
             <ResultCount>
