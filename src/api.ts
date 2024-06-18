@@ -34,3 +34,10 @@ export async function getTrailerId(id:number,cat:string) {
         ,options)
         .then(res => res.json())
 }
+
+export async function getDetail(id:number,cat:string) {
+    return fetch(
+        `${BASE_URL}/${cat}/${id}?language=en-US'`
+        ,options)
+        .then(res => res.json())
+}

@@ -1,6 +1,6 @@
 import { useQuery } from "react-query";
-import { getTrailerId, getTvs } from "../api";
-import { IGetResult, ITrailerResult } from "../interface";
+import { getDetail, getTrailerId, getTvs } from "../api";
+import { IDetail, IGenre, IGetResult, ITrailerResult } from "../interface";
 import styled from "styled-components";
 import { makeImgPath } from "../utils";
 import { AnimatePresence, motion } from "framer-motion";
@@ -68,6 +68,9 @@ const BigCover = styled.div`
     justify-content: center;
     align-items: center;
     overflow: hidden;
+`
+const BigRow = styled.div`
+    width: 100%;
 `
 const BigInfo = styled.div`
     position: absolute;
@@ -195,6 +198,9 @@ function Tv() {
     const [ index, setIndex ] = useState(0);
     const [ leaving, setLeaving ] = useState(false);
     const [ trailerId, setTrailerId ] = useState<string|undefined>(undefined);
+    const [ genres, setGenres ] = useState<IGenre[] | undefined>(undefined);
+    const [coverDimensions, setCoverDimensions] = useState({ width: "0px", height: "0px" });
+    
     const increaseIndex = () => {
         if(data){
             if(leaving) return
@@ -208,13 +214,14 @@ function Tv() {
     const onBoxClick = async (tvId:number) => {
         navigate(`/tv/${tvId}`);
         const response:ITrailerResult = await getTrailerId(tvId, "tv");
-        setTrailerId(response.results[0].key);
+        const detail:IDetail = await getDetail(tvId,"tv");
+        setTrailerId(response.results[0]?.key? response.results[0].key : undefined);
+        setGenres(detail? detail.genres : undefined);
     }
     const onOverlayClick = () => {
         navigate("/tv");
     }
     const clickedTv = bigTvMatch?.params.tvId && data?.results.find(tv => tv.id+"" === bigTvMatch.params.tvId);
-    const [coverDimensions, setCoverDimensions] = useState({ width: "0px", height: "0px" });
     useEffect(() => {
         const coverElement = document.querySelector(".bigCover");
         if (coverElement) {
@@ -300,6 +307,12 @@ function Tv() {
                                 </BigCover>
                                 <BigInfo>
                                     <BigTitle>{clickedTv.name}</BigTitle>
+                                    <BigRow>
+                                        <span>{clickedTv.vote_average}</span>
+                                    </BigRow>
+                                    <BigRow>
+                                        {genres? genres.map(item => <span>{item.name}</span>) : null}
+                                    </BigRow>
                                     <BigOverview>
                                         {clickedTv.overview}
                                     </BigOverview>

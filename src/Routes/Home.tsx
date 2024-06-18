@@ -1,6 +1,6 @@
 import { useQuery } from "react-query";
-import { getMovies, getTrailerId } from "../api";
-import { IGetResult, ITrailerResult } from "../interface";
+import { getDetail, getMovies, getTrailerId } from "../api";
+import { IDetail, IGenre, IGetResult, ITrailerResult } from "../interface";
 import styled from "styled-components";
 import { makeImgPath } from "../utils";
 import { AnimatePresence, motion } from "framer-motion";
@@ -71,6 +71,9 @@ const BigCover = styled.div`
     justify-content: center;
     align-items: center;
     overflow: hidden;
+`
+const BigRow = styled.div`
+    width: 100%;
 `
 const BigInfo = styled.div`
     position: absolute;
@@ -189,13 +192,18 @@ const offset = 6;
 function Home() {
     const navigate = useNavigate();
     const bigMovieMatch = useMatch("/movies/:movieId");
+    
     const { data, isLoading } = useQuery<IGetResult>(
         ["movies","nowPlaying"],
         getMovies
     );
+    
     const [ index, setIndex ] = useState(0);
     const [ leaving, setLeaving ] = useState(false);
     const [ trailerId, setTrailerId ] = useState<string|undefined>(undefined);
+    const [ genres, setGenres ] = useState<IGenre[] | undefined>(undefined);
+    const [coverDimensions, setCoverDimensions] = useState({ width: "0px", height: "0px" });
+
     const increaseIndex = () => {
         if(data){
             if(leaving) return
@@ -205,17 +213,17 @@ function Home() {
             setIndex(prev => prev === maxIndex? 0 : prev+1)
         }
     };
+
     const toggleLeaving = () => setLeaving(prev => !prev);
     const onBoxClick = async (movieId:number) => {
         navigate(`/movies/${movieId}`);
-        const response:ITrailerResult = await getTrailerId(movieId, "movie");
-        setTrailerId(response.results[0]?.key? response.results[0].key : undefined);
+        const trailer:ITrailerResult = await getTrailerId(movieId, "movie");
+        const detail:IDetail = await getDetail(movieId,"movie");
+        setTrailerId(trailer.results[0]?.key? trailer.results[0].key : undefined);
+        setGenres(detail? detail.genres : undefined);
     }
-    const onOverlayClick = () => {
-        navigate("/");
-    }
+    const onOverlayClick = () => navigate("/");
     const clickedMovie = bigMovieMatch?.params.movieId && data?.results.find(movie => movie.id+"" === bigMovieMatch.params.movieId);
-    const [coverDimensions, setCoverDimensions] = useState({ width: "0px", height: "0px" });
     useEffect(() => {
         const coverElement = document.querySelector(".bigCover");
         if (coverElement) {
@@ -223,7 +231,6 @@ function Home() {
             setCoverDimensions({ width: `${offsetWidth}px`, height: `${offsetHeight}px` });
         }
     }, [bigMovieMatch, data]);
-
     return(
         <Wrapper>
             {isLoading? 
@@ -302,6 +309,12 @@ function Home() {
                                 </BigCover>
                                 <BigInfo>
                                     <BigTitle>{clickedMovie.title}</BigTitle>
+                                    <BigRow>
+                                        <span>{clickedMovie.vote_average}</span>
+                                    </BigRow>
+                                    <BigRow>
+                                        {genres? genres.map(item => <span>{item.name}</span>) : null}
+                                    </BigRow>
                                     <BigOverview>
                                         {clickedMovie.overview}
                                     </BigOverview>

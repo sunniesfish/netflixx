@@ -7,6 +7,7 @@ export interface IResult{
     title?:string;
     overview:string;
     media_type:string;
+    vote_average:number;
 }
 
 export interface IGetResult {
@@ -45,4 +46,13 @@ export interface ITrailer{
     site:string,
     size:number,
     official:boolean
+}
+
+export interface IGenre{
+    id:number,
+    name:string
+}
+export interface IDetail{
+    genres:IGenre[],
+    homepage: string,
 }
