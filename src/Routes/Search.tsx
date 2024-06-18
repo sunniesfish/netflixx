@@ -1,11 +1,11 @@
 import { useQuery } from "react-query";
 import { useLocation } from "react-router-dom";
 import { doSearch } from "../api";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import styled from "styled-components";
 import { IGetResult } from "../interface";
 import { makeImgPath } from "../utils";
-import { motion } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 const Wrapper = styled.div`
     width: 100%;
     min-height: 50vh;
@@ -33,10 +33,12 @@ const ResultCount = styled.div`
 `
 const ResultBox = styled.div`
     width: 100%;
+    height: 100vh;
     display: flex;
     align-items: center;
     flex-direction: column;
     border: 1px solid blue;
+    overflow: hidden;
 `
 const Tab = styled.div`
     display: flex;
@@ -59,7 +61,7 @@ const Selector = styled(motion.div)`
     top: 0;
     left: 0;
 `
-const ResultItem = styled.div`
+const ResultItem = styled(motion.div)`
     margin-bottom: 15px;
     width: 90%;
     height: 150px;
@@ -102,6 +104,22 @@ function Search() {
     const { data, isLoading } = useQuery<IGetResult>(
         ["search", keyword, pageNo, adult, category],() => doSearch({keyword, pageNo, adult, category})
     );
+
+    const handleObserver = (entries:IntersectionObserverEntry[]) => {
+        const target = entries[0];
+        if(target.isIntersecting){
+            setPageNo(prev => prev + 1);
+        }
+    }
+    useEffect(()=>{
+        const observer = new IntersectionObserver(handleObserver,{
+            threshold:0
+        });
+        const observeTarget = document.querySelector(".observer");
+        if(observeTarget){
+            observer.observe(observeTarget);
+        }
+    },[]);
     return (
         <Wrapper>
             <ResultCount>
@@ -127,22 +145,24 @@ function Search() {
                 </Loader> 
                 :
                 <>
-                {data?.results.map(result =>
-                    <ResultItem key={result.id}>
-                        <Img 
-                            style={{
-                                backgroundImage:`url(${makeImgPath(
-                                    result.backdrop_path? result.backdrop_path : result.poster_path? result.poster_path : "", 
-                                    "w500"
-                                )})`}}
-                        />
-                        <Info>
-                            <h2>{result.name? result.name : result.title? result.title : null}</h2>
-                            <span>{result.media_type}</span>
-                            <p>{result.overview}</p>
-                        </Info>
-                    </ResultItem>
-                )}
+                <AnimatePresence>
+                    {data?.results.map(result =>
+                        <ResultItem key={result.id}>
+                            <Img 
+                                style={{
+                                    backgroundImage:`url(${makeImgPath(
+                                        result.backdrop_path? result.backdrop_path : result.poster_path? result.poster_path : "", 
+                                        "w500"
+                                    )})`}}
+                            />
+                            <Info>
+                                <h2>{result.name? result.name : result.title? result.title : null}</h2>
+                                <span>{result.media_type}</span>
+                                <p>{result.overview}</p>
+                            </Info>
+                        </ResultItem>
+                    )}
+                </AnimatePresence>
                 </>
                 }
             </ResultBox>
