@@ -210,6 +210,20 @@ const Star = () => {
         </svg>
     </>
 }
+const GoPrev = () => {
+    return <>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512">
+            <path d="M9.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l192 192c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L77.3 256 246.6 86.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-192 192z"/>
+        </svg>
+    </>
+}
+const GoNext = () => {
+    return <>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512">
+            <path d="M310.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-192 192c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L242.7 256 73.4 86.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l192 192z"/>
+        </svg>
+    </>
+}
 function Home() {
     const navigate = useNavigate();
     const bigMovieMatch = useMatch("/movies/:movieId");
@@ -225,13 +239,24 @@ function Home() {
     const [ genres, setGenres ] = useState<IGenre[] | undefined>(undefined);
     const [coverDimensions, setCoverDimensions] = useState({ width: "0px", height: "0px" });
 
-    const increaseIndex = () => {
+    const increaseIndex = (event:any) => {
+        event.preventDefault();
         if(data){
             if(leaving) return
             toggleLeaving();
             const totalMovie = data.results.length - 1;
             const maxIndex = Math.floor(totalMovie/offset)-1;
             setIndex(prev => prev === maxIndex? 0 : prev+1)
+        }
+    };
+    const decreaseIndex = (event:any) => {
+        event.preventDefault();
+        if(data){
+            if(leaving) return
+            toggleLeaving();
+            const totalMovie = data.results.length - 1;
+            const maxIndex = Math.floor(totalMovie/offset)-1;
+            setIndex(prev => prev === 0? maxIndex : prev-1)
         }
     };
 
@@ -260,8 +285,7 @@ function Home() {
             <Loader>Loading..</Loader> 
             :
             <>
-                <Banner 
-                    onClick={increaseIndex} 
+                <Banner
                     bgPhoto={data?.results[0].backdrop_path || ""}
                 >
                     <Title>{data?.results[0].title}</Title>
@@ -272,6 +296,9 @@ function Home() {
                         initial={false} 
                         onExitComplete={toggleLeaving}
                     >
+                        <button onClick={decreaseIndex}>
+                            <GoPrev/>
+                        </button>
                         <Row 
                             variants={rowVariants} 
                             initial="hidden"
@@ -303,6 +330,9 @@ function Home() {
                                 )
                             }
                         </Row>
+                        <button onClick={increaseIndex}>
+                            <GoNext/>
+                        </button>
                     </AnimatePresence>
                 </Slider>
                 <AnimatePresence>
