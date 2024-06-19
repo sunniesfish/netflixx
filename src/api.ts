@@ -22,6 +22,7 @@ export async function getTvs() {
 }
 
 export async function doSearch({keyword, adult, langauge, pageNo, category}:ISearchQuery){
+    console.log("pageNo ",pageNo)
     return fetch(
         `${BASE_URL}/search/${category}?query=${keyword}&include_adult=${adult? "true" : "false"}&language=${langauge? langauge : "en-US"}&page=${pageNo}`
         , options)
