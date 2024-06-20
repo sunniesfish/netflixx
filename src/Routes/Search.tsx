@@ -1,7 +1,7 @@
-import { useQuery } from "react-query";
+import { useInfiniteQuery, useQuery } from "react-query";
 import { useLocation } from "react-router-dom";
 import { doSearch } from "../api";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import styled from "styled-components";
 import { IGetResult } from "../interface";
 import { makeImgPath } from "../utils";
@@ -33,12 +33,13 @@ const ResultCount = styled.div`
 `
 const ResultBox = styled.div`
     width: 100%;
-    height: 100vh;
+    height: 80vh;
     display: flex;
+    overflow-y: scroll;
+
     align-items: center;
     flex-direction: column;
     border: 1px solid blue;
-    overflow: hidden;
 `
 const Tab = styled.div`
     display: flex;
@@ -104,7 +105,6 @@ function Search() {
     const { data, isLoading } = useQuery<IGetResult>(
         ["search", keyword, pageNo, adult, category],() => doSearch({keyword, pageNo, adult, category})
     );
-
     const handleObserver = (entries:IntersectionObserverEntry[]) => {
         const target = entries[0];
         if(target.isIntersecting){
@@ -113,17 +113,20 @@ function Search() {
     }
     useEffect(()=>{
         const observer = new IntersectionObserver(handleObserver,{
-            threshold:0
+            threshold:0,root:document.querySelector(".observing-root")
         });
         const observeTarget = document.querySelector(".observer");
         if(observeTarget){
             observer.observe(observeTarget);
+            console.log("observeTarget",observeTarget);
+            console.log("observer",observer)
         }
     },[]);
     useEffect(()=>{
         console.log(data);
     },[data])
     return (
+        <>
         <Wrapper>
             <ResultCount>
                 <span>
@@ -131,8 +134,8 @@ function Search() {
                     {data?.total_results? `${data.total_results} Results` : "0 Result"}
                 </span>
             </ResultCount>
-            <ResultBox>
-                <Tab>
+            <ResultBox className="observing-root">
+                 <Tab>
                     <div onClick={() => setCategory("movie")}>
                         Movie
                         {category === "movie"? <Selector layoutId="selector">Movie</Selector> : null}
@@ -168,8 +171,10 @@ function Search() {
                 </AnimatePresence>
                 </>
                 }
+                <div className="observer" style={{height:"10px"}}/>
             </ResultBox>
         </Wrapper>
+        </>
     )
 }
 
