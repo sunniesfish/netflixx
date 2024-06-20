@@ -120,6 +120,9 @@ function Search() {
             observer.observe(observeTarget);
         }
     },[]);
+    useEffect(()=>{
+        console.log(data);
+    },[data])
     return (
         <Wrapper>
             <ResultCount>
