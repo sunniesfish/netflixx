@@ -3,7 +3,7 @@ import { useLocation } from "react-router-dom";
 import { doSearch } from "../api";
 import { useEffect, useRef, useState } from "react";
 import styled from "styled-components";
-import { IGetResult } from "../interface";
+import { IGetResult, IResult } from "../interface";
 import { makeImgPath } from "../utils";
 import { AnimatePresence, motion } from "framer-motion";
 const Wrapper = styled.div`
@@ -33,13 +33,25 @@ const ResultCount = styled.div`
 `
 const ResultBox = styled.div`
     width: 100%;
-    height: 80vh;
+    height: 75vh;
     display: flex;
     overflow-y: scroll;
 
     align-items: center;
     flex-direction: column;
     border: 1px solid blue;
+    .observer{
+        background-color: green;
+        height: 150px;
+    }
+`
+const ResultContainer = styled.div`
+    width: 100%;
+    min-height: 80vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
 `
 const Tab = styled.div`
     display: flex;
@@ -97,33 +109,46 @@ const Info = styled.div`
 `
 function Search() {
     const location = useLocation();
+
     const [ pageNo, setPageNo ] = useState(1);
     const [ adult, setAdult ] = useState(false);
+    const [ items, setItems ] = useState<IResult[]>([]);
+    const [ category, setCategory ] = useState("movie")
+
     const temp = new URLSearchParams(location.search).get("keyword");
     const keyword = temp? temp : "";
-    const [ category, setCategory ] = useState("movie")
+    
     const { data, isLoading } = useQuery<IGetResult>(
-        ["search", keyword, pageNo, adult, category],() => doSearch({keyword, pageNo, adult, category})
+        ["search", keyword, pageNo, adult, category],
+        () => doSearch({keyword, pageNo, adult, category}),
+        {keepPreviousData: true}
     );
+
+
     const handleObserver = (entries:IntersectionObserverEntry[]) => {
         const target = entries[0];
         if(target.isIntersecting){
             setPageNo(prev => prev + 1);
+            console.log("intersecting")
         }
     }
+
+
     useEffect(()=>{
-        const observer = new IntersectionObserver(handleObserver,{
-            threshold:0,root:document.querySelector(".observing-root")
-        });
         const observeTarget = document.querySelector(".observer");
+        const observer = new IntersectionObserver(handleObserver,{
+            threshold:0.5,root:document.querySelector(".observing-root")
+        });
         if(observeTarget){
             observer.observe(observeTarget);
-            console.log("observeTarget",observeTarget);
-            console.log("observer",observer)
         }
     },[]);
     useEffect(()=>{
-        console.log(data);
+        if(data?.results){
+            setItems(prev => {
+               return prev !== data.results ? prev.concat(data.results) : prev
+            })
+        }
     },[data])
     return (
         <>
@@ -134,17 +159,17 @@ function Search() {
                     {data?.total_results? `${data.total_results} Results` : "0 Result"}
                 </span>
             </ResultCount>
+            <Tab>
+                <div onClick={() => setCategory("movie")}>
+                    Movie
+                    {category === "movie"? <Selector layoutId="selector">Movie</Selector> : null}
+                </div>
+                <div onClick={() => setCategory("tv")}>
+                    TV Series
+                    {category === "tv"? <Selector layoutId="selector">TV Series</Selector> : null}
+                </div>
+            </Tab>
             <ResultBox className="observing-root">
-                 <Tab>
-                    <div onClick={() => setCategory("movie")}>
-                        Movie
-                        {category === "movie"? <Selector layoutId="selector">Movie</Selector> : null}
-                    </div>
-                    <div onClick={() => setCategory("tv")}>
-                        TV Series
-                        {category === "tv"? <Selector layoutId="selector">TV Series</Selector> : null}
-                    </div>
-                </Tab>
                 {isLoading? 
                 <Loader>
                     Loading...
@@ -152,26 +177,28 @@ function Search() {
                 :
                 <>
                 <AnimatePresence>
-                    {data?.results.map(result =>
-                        <ResultItem key={result.id}>
-                            <Img 
-                                style={{
-                                    backgroundImage:`url(${makeImgPath(
-                                        result.backdrop_path? result.backdrop_path : result.poster_path? result.poster_path : "", 
-                                        "w500"
-                                    )})`}}
-                            />
-                            <Info>
-                                <h2>{result.name? result.name : result.title? result.title : null}</h2>
-                                <span>{result.media_type}</span>
-                                <p>{result.overview}</p>
-                            </Info>
-                        </ResultItem>
-                    )}
+                    <ResultContainer>
+                        {items.map((result,index) =>
+                            <ResultItem key={index}>
+                                <Img 
+                                    style={{
+                                        backgroundImage:`url(${makeImgPath(
+                                            result.backdrop_path? result.backdrop_path : result.poster_path? result.poster_path : "", 
+                                            "w500"
+                                        )})`}}
+                                />
+                                <Info>
+                                    <h2>{result.name? result.name : result.title? result.title : null}</h2>
+                                    <span>{result.media_type}</span>
+                                    <p>{result.overview}</p>
+                                </Info>
+                            </ResultItem>
+                        )}
+                        <ResultItem className="observer">observer</ResultItem>
+                    </ResultContainer>
                 </AnimatePresence>
                 </>
                 }
-                <div className="observer" style={{height:"10px"}}/>
             </ResultBox>
         </Wrapper>
         </>
