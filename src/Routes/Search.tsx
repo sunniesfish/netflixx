@@ -40,10 +40,6 @@ const ResultBox = styled.div`
     align-items: center;
     flex-direction: column;
     border: 1px solid blue;
-    .observer{
-        background-color: green;
-        height: 150px;
-    }
 `
 const ResultContainer = styled.div`
     width: 100%;
@@ -52,6 +48,9 @@ const ResultContainer = styled.div`
     flex-direction: column;
     align-items: center;
     position: relative;
+    .observer{
+        background-color: green;
+    }
 `
 const Tab = styled.div`
     display: flex;
