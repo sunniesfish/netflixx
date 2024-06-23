@@ -12,8 +12,6 @@ const Wrapper = styled.div`
     display: flex;
     align-items: center;
     flex-direction: column;
-
-    border: 1px solid red;
 `
 const Loader = styled.div`
     height: 20vh;
@@ -39,7 +37,9 @@ const ResultBox = styled.div`
 
     align-items: center;
     flex-direction: column;
-    border: 1px solid blue;
+    .observer{
+        margin-bottom: 20px;
+    }
 `
 const ResultContainer = styled.div`
     width: 100%;
@@ -48,21 +48,20 @@ const ResultContainer = styled.div`
     flex-direction: column;
     align-items: center;
     position: relative;
-    .observer{
-        background-color: green;
-    }
 `
 const Tab = styled.div`
     display: flex;
     justify-content: space-evenly;
-    width: 170px;
+    width: 160px;
+    border-radius: 30px;
+    border: 1px solid ${prev => prev.theme.white.lighter};
+    margin-bottom: 30px;
     &:hover{
         cursor: pointer;
     }
     &>div{
         position: relative;
         width: 50%;
-        border: 1px solid green;
         text-align: center;
     }
 `
@@ -70,6 +69,7 @@ const Selector = styled(motion.div)`
     position: absolute;
     width: 100%;
     background-color: red;
+    border-radius: 30px;
     top: 0;
     left: 0;
 `
@@ -79,8 +79,15 @@ const ResultItem = styled(motion.div)`
     height: 150px;
     display: flex;
     justify-content: space-evenly;
-    
-    border: 1px solid red;
+`
+const Observer = styled.div`
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    span{
+        font-weight: bold;
+    }
 `
 const Img = styled.div`
     background-position: center center;
@@ -116,6 +123,9 @@ function Search() {
 
     const temp = new URLSearchParams(location.search).get("keyword");
     const keyword = temp? temp : "";
+
+    const lastElementRef = useRef<HTMLDivElement | null>(null);
+    const resultBoxRef = useRef<HTMLDivElement | null>(null);
     
     const { data, isLoading } = useQuery<IGetResult>(
         ["search", keyword, pageNo, adult, category],
@@ -123,6 +133,14 @@ function Search() {
         {keepPreviousData: true}
     );
 
+    const handleCategoryChange = (cat:string) => {
+        setItems([]);
+        setCategory(cat);
+        setPageNo(1);
+        if (resultBoxRef.current) {
+            resultBoxRef.current.scrollTo(0, 0);
+        }
+    } 
 
     const handleObserver = (entries:IntersectionObserverEntry[]) => {
         const target = entries[0];
@@ -136,12 +154,12 @@ function Search() {
     useEffect(()=>{
         const observeTarget = document.querySelector(".observer");
         const observer = new IntersectionObserver(handleObserver,{
-            threshold:0.5,root:document.querySelector(".observing-root")
+            threshold:0.4,root:document.querySelector(".observing-root")
         });
         if(observeTarget){
             observer.observe(observeTarget);
         }
-    },[]);
+    },[category]);
     useEffect(()=>{
         if(data?.results){
             setItems(prev => {
@@ -159,16 +177,16 @@ function Search() {
                 </span>
             </ResultCount>
             <Tab>
-                <div onClick={() => setCategory("movie")}>
+                <div onClick={() => handleCategoryChange("movie")}>
                     Movie
                     {category === "movie"? <Selector layoutId="selector">Movie</Selector> : null}
                 </div>
-                <div onClick={() => setCategory("tv")}>
+                <div onClick={() => handleCategoryChange("tv")}>
                     TV Series
                     {category === "tv"? <Selector layoutId="selector">TV Series</Selector> : null}
                 </div>
             </Tab>
-            <ResultBox className="observing-root">
+            <ResultBox className="observing-root" ref={resultBoxRef}>
                 {isLoading? 
                 <Loader>
                     Loading...
@@ -193,7 +211,9 @@ function Search() {
                                 </Info>
                             </ResultItem>
                         )}
-                        <ResultItem className="observer">observer</ResultItem>
+                        <Observer className="observer" ref={lastElementRef}>
+                            <span>Loading...</span>
+                        </Observer>
                     </ResultContainer>
                 </AnimatePresence>
                 </>

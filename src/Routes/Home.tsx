@@ -1,5 +1,5 @@
 import { useQuery } from "react-query";
-import { getDetail, getMovies, getTrailerId } from "../api";
+import { getDetail, getMovies, getTopMovies, getTrailerId, getUpComMovies } from "../api";
 import { IDetail, IGenre, IGetResult, ITrailerResult } from "../interface";
 import styled from "styled-components";
 import { makeImgPath } from "../utils";
@@ -116,6 +116,12 @@ const BigOverview = styled.p`
 const Slider = styled.div`
     position: relative;
     top: -150px;
+    margin-bottom: 15vw;
+    background-color: rgba(0,0,0,0.7);
+`
+const Label = styled.div`
+    height: 32px;
+    padding: 5px 20px 20px 20px;
 `
 const Row = styled(motion.div)`
     display: grid;
@@ -124,6 +130,52 @@ const Row = styled(motion.div)`
     margin-bottom: 5px;
     width: 100%;
     position: absolute;
+
+    button{
+        position: absolute;
+        z-index: 99;
+        height: 100%;
+        width: 30px;
+        background-color: rgba(0,0,0,0.7);
+        border: none;
+        svg{
+            fill: dimgray;
+            width: 13px;
+        }
+        &:first-child{
+            left: 0;
+        }
+        &:last-child{
+            right: 0;
+        }
+    }
+`
+const Row2 = styled(motion.div)`
+    display: grid;
+    gap: 5px;
+    grid-template-columns: repeat(5, 1fr);
+    margin-bottom: 5px;
+    width: 100%;
+    position: absolute;
+
+    button{
+        position: absolute;
+        z-index: 99;
+        height: 100%;
+        width: 30px;
+        background-color: rgba(0,0,0,0.7);
+        border: none;
+        svg{
+            fill: dimgray;
+            width: 13px;
+        }
+        &:first-child{
+            left: 0;
+        }
+        &:last-child{
+            right: 0;
+        }
+    }
 `
 const Box = styled(motion.div)`
     background-size: cover;
@@ -133,6 +185,7 @@ const Box = styled(motion.div)`
     display: flex;
     justify-content: center;
     flex-direction: column;
+    position: relative;
     &:hover{
         cursor: pointer;
     }
@@ -150,14 +203,19 @@ const Box = styled(motion.div)`
 `
 const Info = styled(motion.div)`
     margin: 0;
-    padding: 10px;
+    height: 35px;
     background: linear-gradient(
         to bottom,
         ${props => props.theme.black.darker},
         black
     );
+    position: absolute;
+    bottom: 0px;
     opacity: 0;
     width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
     h4{
         text-align: center;
         font-weight: bold;
@@ -203,6 +261,7 @@ const BoxVariants = {
     },
 }
 const offset = 6;
+const offset2 = 5;
 const Star = () => {
     return <>
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512">
@@ -227,20 +286,26 @@ const GoNext = () => {
 function Home() {
     const navigate = useNavigate();
     const bigMovieMatch = useMatch("/movies/:movieId");
-    
-    const { data, isLoading } = useQuery<IGetResult>(
-        ["movies","nowPlaying"],
-        getMovies
-    );
-    
+    const [ clickedMovie, setClickedMovie ] = useState<any>(null);
+
+    const { data, isLoading } = useQuery<IGetResult>(["movies","nowPlaying"],getMovies);
     const [ index, setIndex ] = useState(0);
+
+    const [ tPage, setTpage ] = useState(1);
+    const [ tIndex, setTindex ] = useState(0);
+    const { data:tData, isLoading:tIsLoading } = useQuery<IGetResult>(["movies","tdata",tPage],()=> getTopMovies(tPage));
+
+    const [ uPage, setUpage ] = useState(1);
+    const [ uIndex, setUindex ] = useState(0);
+    const { data:uData, isLoading:uIsLoading } = useQuery<IGetResult>(["movies","udata",uPage],() => getUpComMovies(uPage));
+
+
     const [ leaving, setLeaving ] = useState(false);
     const [ trailerId, setTrailerId ] = useState<string|undefined>(undefined);
     const [ genres, setGenres ] = useState<IGenre[] | undefined>(undefined);
     const [coverDimensions, setCoverDimensions] = useState({ width: "0px", height: "0px" });
 
-    const increaseIndex = (event:any) => {
-        event.preventDefault();
+    const increaseIndex = () => {
         if(data){
             if(leaving) return
             toggleLeaving();
@@ -249,8 +314,7 @@ function Home() {
             setIndex(prev => prev === maxIndex? 0 : prev+1)
         }
     };
-    const decreaseIndex = (event:any) => {
-        event.preventDefault();
+    const decreaseIndex = () => {
         if(data){
             if(leaving) return
             toggleLeaving();
@@ -259,6 +323,29 @@ function Home() {
             setIndex(prev => prev === 0? maxIndex : prev-1)
         }
     };
+
+    const decreaseUpCIndex = () => {
+        if (uPage > 1 || uIndex) {
+            uIndex === 3 && setUpage(prev => prev - 1);
+            uIndex === 3 ? setUindex(0) : setUindex(prev => prev - 1);
+        }
+    };
+    const increaseUpCIndex = () => {
+        uIndex === 3 && setUpage(prev => prev + 1);
+        uIndex === 3 ? setUindex(0) : setUindex(prev => prev + 1);
+    };
+    
+    const decreaseTopIndex = () => {
+        if (tPage > 1 || tIndex > 1) {
+            tPage > 1 && tIndex === 3 && setTpage(prev => prev - 1);
+            tIndex === 3 ? setTindex(0) : setTindex(prev => prev - 1);
+        }
+    };
+    const increaseTopIndex = () => {
+        tIndex === 3 && setTpage(prev => prev + 1)
+        tIndex === 3 ? setTindex(0) : setTindex(prev => prev + 1);
+    };
+
 
     const toggleLeaving = () => setLeaving(prev => !prev);
     const onBoxClick = async (movieId:number) => {
@@ -269,9 +356,13 @@ function Home() {
             setTrailerId(trailer.results[0]?.key? trailer.results[0].key : undefined);
         }, 1000);
         setGenres(detail? detail.genres : undefined);
+        if(bigMovieMatch && data) {
+            setClickedMovie(data.results.find(movie => movie.id+"" === bigMovieMatch.params.movieId))
+        } else {
+            setClickedMovie(detail)
+        }
     }
     const onOverlayClick = () => navigate("/");
-    const clickedMovie = bigMovieMatch?.params.movieId && data?.results.find(movie => movie.id+"" === bigMovieMatch.params.movieId);
     useEffect(() => {
         const coverElement = document.querySelector(".bigCover");
         if (coverElement) {
@@ -281,7 +372,7 @@ function Home() {
     }, [bigMovieMatch, data]);
     return(
         <Wrapper>
-            {isLoading? 
+            {isLoading && tIsLoading && uIsLoading? 
             <Loader>Loading..</Loader> 
             :
             <>
@@ -292,13 +383,13 @@ function Home() {
                     <Overview>{data?.results[0].overview}</Overview>
                 </Banner>
                 <Slider>
+                    <Label>
+                        Now Playing
+                    </Label>
                     <AnimatePresence
                         initial={false} 
                         onExitComplete={toggleLeaving}
                     >
-                        <button onClick={decreaseIndex}>
-                            <GoPrev/>
-                        </button>
                         <Row 
                             variants={rowVariants} 
                             initial="hidden"
@@ -307,6 +398,9 @@ function Home() {
                             transition={{type:"tween", duration:1}}
                             key={index}
                         >
+                            <button onClick={decreaseIndex}>
+                                <GoPrev/>
+                            </button>
                             {data?.results
                                 .slice(1)
                                 .slice(offset*index, offset*index+offset)       
@@ -329,10 +423,102 @@ function Home() {
                                     </Box>
                                 )
                             }
+                            <button onClick={increaseIndex}>
+                                <GoNext/>
+                            </button>
                         </Row>
-                        <button onClick={increaseIndex}>
-                            <GoNext/>
-                        </button>
+                    </AnimatePresence>
+                </Slider>
+                <Slider>
+                    <Label>
+                        Up Comming
+                    </Label>
+                    <AnimatePresence
+                        initial={false} 
+                        onExitComplete={toggleLeaving}
+                    >
+                        <Row2 
+                            variants={rowVariants} 
+                            initial="hidden"
+                            animate="visible"
+                            exit="exit"
+                            transition={{type:"tween", duration:1}}
+                            key={uPage}
+                        >
+                            <button onClick={decreaseUpCIndex}>
+                                <GoPrev/>
+                            </button>
+                            {uData?.results
+                                .slice(offset2*uIndex, offset2*uIndex+offset2)       
+                                .map(umovie => 
+                                    <Box    
+                                        layoutId={umovie.id+"u"}
+                                        onClick={()=>onBoxClick(umovie.id)}
+                                        key={umovie.id} 
+                                        variants={BoxVariants}
+                                        initial="normal"
+                                        whileHover="hover"
+                                        transition={{type:"tween"}}
+                                    >
+                                        <img src={makeImgPath(umovie.backdrop_path, "w500")} alt="poster"/>
+                                        <Info
+                                            variants={infoVariants}
+                                        >
+                                            <h4>{umovie.title}</h4>
+                                        </Info>
+                                    </Box>
+                                )
+                            }
+                            <button onClick={increaseUpCIndex}>
+                                <GoNext/>
+                            </button>
+                        </Row2>
+                    </AnimatePresence>
+                </Slider>
+                <Slider>
+                    <Label>
+                        Top Rated
+                    </Label>
+                    <AnimatePresence
+                        initial={false} 
+                        onExitComplete={toggleLeaving}
+                    >
+                        <Row2 
+                            variants={rowVariants} 
+                            initial="hidden"
+                            animate="visible"
+                            exit="exit"
+                            transition={{type:"tween", duration:1}}
+                            key={tPage}
+                        >
+                            <button onClick={decreaseTopIndex}>
+                                <GoPrev/>
+                            </button>
+                            {tData?.results
+                                .slice(offset2*tIndex, offset2*tIndex+offset2)       
+                                .map(tmovie => 
+                                    <Box 
+                                        layoutId={tmovie.id+"t"}
+                                        onClick={()=>onBoxClick(tmovie.id)}
+                                        key={tmovie.id} 
+                                        variants={BoxVariants}
+                                        initial="normal"
+                                        whileHover="hover"
+                                        transition={{type:"tween"}}
+                                    >
+                                        <img src={makeImgPath(tmovie.backdrop_path, "w500")} alt="poster"/>
+                                        <Info
+                                            variants={infoVariants}
+                                        >
+                                            <h4>{tmovie.title}</h4>
+                                        </Info>
+                                    </Box>
+                                )
+                            }
+                            <button onClick={increaseTopIndex}>
+                                <GoNext/>
+                            </button>
+                        </Row2>
                     </AnimatePresence>
                 </Slider>
                 <AnimatePresence>

@@ -1,3 +1,4 @@
+import { Retryer } from "react-query/types/core/retryer";
 import { ISearchQuery } from "./interface";
 
 const KEY = `api_key=${process.env.REACT_APP_TMDB_API_KEY}`
@@ -16,9 +17,28 @@ export async function getMovies(){
         .then(res => res.json());
 }
 
+export async function getTopMovies(pageNo:number) {
+    return fetch(`${BASE_URL}/movie/top_rated?language=en-US&page=${pageNo}`, options)
+    .then(response => response.json())
+}
+
+export async function getUpComMovies(pageNo:number) {
+    return fetch(`${BASE_URL}/movie/upcoming?language=en-US&page=${pageNo}`, options)
+    .then(response => response.json())
+}
+
 export async function getTvs() {
     return fetch(`${BASE_URL}/trending/tv/day?language=en-US`, options)
-        .then(res => res.json());
+    .then(response => response.json())
+}
+
+export async function getTopTvs(pageNo:number) {
+    return fetch(`${BASE_URL}/tv/top_rated?language=en-US&page=${pageNo}`, options)
+      .then(response => response.json())
+}
+export async function getPopTvs(pageNo:number) {
+    return fetch(`${BASE_URL}/tv/popular?language=en-US&page=${pageNo}`, options)
+    .then(response => response.json())
 }
 
 export async function doSearch({keyword, adult, langauge, pageNo, category}:ISearchQuery){

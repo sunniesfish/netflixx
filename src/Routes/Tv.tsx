@@ -1,5 +1,5 @@
 import { useQuery } from "react-query";
-import { getDetail, getTrailerId, getTvs } from "../api";
+import { getDetail, getPopTvs, getTopTvs, getTrailerId, getTvs } from "../api";
 import { IDetail, IGenre, IGetResult, ITrailerResult } from "../interface";
 import styled from "styled-components";
 import { makeImgPath } from "../utils";
@@ -116,6 +116,12 @@ const BigOverview = styled.p`
 const Slider = styled.div`
     position: relative;
     top: -150px;
+    margin-bottom: 15vw;
+    background-color: rgba(0,0,0,0.7);
+`
+const Label = styled.div`
+    height: 32px;
+    padding: 5px 20px 20px 20px;
 `
 const Row = styled(motion.div)`
     display: grid;
@@ -124,6 +130,52 @@ const Row = styled(motion.div)`
     margin-bottom: 5px;
     width: 100%;
     position: absolute;
+
+    button{
+        position: absolute;
+        z-index: 99;
+        height: 100%;
+        width: 30px;
+        background-color: rgba(0,0,0,0.7);
+        border: none;
+        svg{
+            fill: dimgray;
+            width: 13px;
+        }
+        &:first-child{
+            left: 0;
+        }
+        &:last-child{
+            right: 0;
+        }
+    }
+`
+const Row2 = styled(motion.div)`
+    display: grid;
+    gap: 5px;
+    grid-template-columns: repeat(5, 1fr);
+    margin-bottom: 5px;
+    width: 100%;
+    position: absolute;
+
+    button{
+        position: absolute;
+        z-index: 99;
+        height: 100%;
+        width: 30px;
+        background-color: rgba(0,0,0,0.7);
+        border: none;
+        svg{
+            fill: dimgray;
+            width: 13px;
+        }
+        &:first-child{
+            left: 0;
+        }
+        &:last-child{
+            right: 0;
+        }
+    }
 `
 const Box = styled(motion.div)`
     background-size: cover;
@@ -133,6 +185,7 @@ const Box = styled(motion.div)`
     display: flex;
     justify-content: center;
     flex-direction: column;
+    position: relative;
     &:hover{
         cursor: pointer;
     }
@@ -150,14 +203,19 @@ const Box = styled(motion.div)`
 `
 const Info = styled(motion.div)`
     margin: 0;
-    padding: 10px;
+    height: 35px;
     background: linear-gradient(
         to bottom,
         ${props => props.theme.black.darker},
         black
     );
+    position: absolute;
+    bottom: 0px;
     opacity: 0;
     width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
     h4{
         text-align: center;
         font-weight: bold;
@@ -203,6 +261,7 @@ const BoxVariants = {
     },
 }
 const offset = 6;
+const offset2 = 5;
 const Star = () => {
     return <>
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512">
@@ -210,20 +269,44 @@ const Star = () => {
         </svg>
     </>
 }
-
+const GoPrev = () => {
+    return <>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512">
+            <path d="M9.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l192 192c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L77.3 256 246.6 86.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-192 192z"/>
+        </svg>
+    </>
+}
+const GoNext = () => {
+    return <>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512">
+            <path d="M310.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-192 192c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L242.7 256 73.4 86.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l192 192z"/>
+        </svg>
+    </>
+}
 function Tv() {
     const navigate = useNavigate();
     const bigTvMatch = useMatch("/tv/:tvId");
-    const { data, isLoading } = useQuery<IGetResult>(
-        ["tv","nowPlaying"],
-        getTvs
-    );
+    const [ clickedTv, setClickedTv ] = useState<any>(null);
+
+    const { data, isLoading } = useQuery<IGetResult>(["tv","nowPlaying"],getTvs);
     const [ index, setIndex ] = useState(0);
+
+    const [ tPage, setTpage ] = useState(1);
+    const [ tIndex, setTindex ] = useState(0);
+    const { data:tData, isLoading:tIsLoading } = useQuery<IGetResult>(["tvs","tdata",tPage],()=> getTopTvs(tPage));
+
+    const [ uPage, setUpage ] = useState(1);
+    const [ uIndex, setUindex ] = useState(0);
+    const { data:uData, isLoading:uIsLoading } = useQuery<IGetResult>(["tvs","udata",uPage],() => getPopTvs(uPage));
+
+
     const [ leaving, setLeaving ] = useState(false);
     const [ trailerId, setTrailerId ] = useState<string|undefined>(undefined);
     const [ genres, setGenres ] = useState<IGenre[] | undefined>(undefined);
     const [coverDimensions, setCoverDimensions] = useState({ width: "0px", height: "0px" });
     
+
+
     const increaseIndex = () => {
         if(data){
             if(leaving) return
@@ -233,18 +316,57 @@ function Tv() {
             setIndex(prev => prev === maxIndex? 0 : prev+1)
         }
     };
+    const decreaseIndex = () => {
+        if(data){
+            if(leaving) return
+            toggleLeaving();
+            const totalMovie = data.results.length - 1;
+            const maxIndex = Math.floor(totalMovie/offset)-1;
+            setIndex(prev => prev === 0? maxIndex : prev-1)
+        }
+    };
+
+    const decreaseUpCIndex = () => {
+        if (uPage > 1 || uIndex) {
+            uIndex === 3 && setUpage(prev => prev - 1);
+            uIndex === 3 ? setUindex(0) : setUindex(prev => prev - 1);
+        }
+    };
+    const increaseUpCIndex = () => {
+        uIndex === 3 && setUpage(prev => prev + 1);
+        uIndex === 3 ? setUindex(0) : setUindex(prev => prev + 1);
+    };
+    
+    const decreaseTopIndex = () => {
+        if (tPage > 1 || tIndex > 1) {
+            tPage > 1 && tIndex === 3 && setTpage(prev => prev - 1);
+            tIndex === 3 ? setTindex(0) : setTindex(prev => prev - 1);
+        }
+    };
+    const increaseTopIndex = () => {
+        tIndex === 3 && setTpage(prev => prev + 1)
+        tIndex === 3 ? setTindex(0) : setTindex(prev => prev + 1);
+    };
+
+
     const toggleLeaving = () => setLeaving(prev => !prev);
     const onBoxClick = async (tvId:number) => {
         navigate(`/tv/${tvId}`);
         const response:ITrailerResult = await getTrailerId(tvId, "tv");
         const detail:IDetail = await getDetail(tvId,"tv");
-        setTrailerId(response.results[0]?.key? response.results[0].key : undefined);
+        setTimeout(() => {
+            setTrailerId(response.results[0]?.key? response.results[0].key : undefined);
+        }, 1000);
         setGenres(detail? detail.genres : undefined);
+        if(bigTvMatch && data) {
+            setClickedTv(data.results.find(tv => tv.id+"" === bigTvMatch.params.tvId))
+        } else {
+            setClickedTv(detail)
+        }
     }
     const onOverlayClick = () => {
         navigate("/tv");
     }
-    const clickedTv = bigTvMatch?.params.tvId && data?.results.find(tv => tv.id+"" === bigTvMatch.params.tvId);
     useEffect(() => {
         const coverElement = document.querySelector(".bigCover");
         if (coverElement) {
@@ -254,18 +376,20 @@ function Tv() {
     }, [bigTvMatch, data]);
     return (
         <Wrapper>
-            {isLoading? 
+            {isLoading && tIsLoading && uIsLoading? 
             <Loader>Loading..</Loader> 
             :
             <>
                 <Banner 
-                    onClick={increaseIndex} 
                     bgPhoto={data?.results[0].backdrop_path || ""}
                 >
                     <Title>{data?.results[0].name}</Title>
                     <Overview>{data?.results[0].overview}</Overview>
                 </Banner>
                 <Slider>
+                    <Label>
+                        Now Playing
+                    </Label>
                     <AnimatePresence
                         initial={false} 
                         onExitComplete={toggleLeaving}
@@ -278,6 +402,9 @@ function Tv() {
                             transition={{type:"tween", duration:1}}
                             key={index}
                         >
+                            <button onClick={decreaseIndex}>
+                                <GoPrev/>
+                            </button>
                             {data?.results
                                 .slice(1)
                                 .slice(offset*index, offset*index+offset)       
@@ -300,7 +427,102 @@ function Tv() {
                                     </Box>
                                 )
                             }
+                            <button onClick={increaseIndex}>
+                                <GoNext/>
+                            </button>
                         </Row>
+                    </AnimatePresence>
+                </Slider>
+                <Slider>
+                    <Label>
+                        Popular
+                    </Label>
+                    <AnimatePresence
+                        initial={false} 
+                        onExitComplete={toggleLeaving}
+                    >
+                        <Row2 
+                            variants={rowVariants} 
+                            initial="hidden"
+                            animate="visible"
+                            exit="exit"
+                            transition={{type:"tween", duration:1}}
+                            key={uPage}
+                        >
+                            <button onClick={decreaseUpCIndex}>
+                                <GoPrev/>
+                            </button>
+                            {uData?.results
+                                .slice(offset2*uIndex, offset2*uIndex+offset2)       
+                                .map(utv => 
+                                    <Box    
+                                        layoutId={utv.id+"u"}
+                                        onClick={()=>onBoxClick(utv.id)}
+                                        key={utv.id} 
+                                        variants={BoxVariants}
+                                        initial="normal"
+                                        whileHover="hover"
+                                        transition={{type:"tween"}}
+                                    >
+                                        <img src={makeImgPath(utv.backdrop_path, "w500")} alt="poster"/>
+                                        <Info
+                                            variants={infoVariants}
+                                        >
+                                            <h4>{utv.name}</h4>
+                                        </Info>
+                                    </Box>
+                                )
+                            }
+                            <button onClick={increaseUpCIndex}>
+                                <GoNext/>
+                            </button>
+                        </Row2>
+                    </AnimatePresence>
+                </Slider>
+                <Slider>
+                    <Label>
+                        Top Rated
+                    </Label>
+                    <AnimatePresence
+                        initial={false} 
+                        onExitComplete={toggleLeaving}
+                    >
+                        <Row2 
+                            variants={rowVariants} 
+                            initial="hidden"
+                            animate="visible"
+                            exit="exit"
+                            transition={{type:"tween", duration:1}}
+                            key={tPage}
+                        >
+                            <button onClick={decreaseTopIndex}>
+                                <GoPrev/>
+                            </button>
+                            {tData?.results
+                                .slice(offset2*tIndex, offset2*tIndex+offset2)       
+                                .map(ttv => 
+                                    <Box 
+                                        layoutId={ttv.id+"t"}
+                                        onClick={()=>onBoxClick(ttv.id)}
+                                        key={ttv.id} 
+                                        variants={BoxVariants}
+                                        initial="normal"
+                                        whileHover="hover"
+                                        transition={{type:"tween"}}
+                                    >
+                                        <img src={makeImgPath(ttv.backdrop_path, "w500")} alt="poster"/>
+                                        <Info
+                                            variants={infoVariants}
+                                        >
+                                            <h4>{ttv.name}</h4>
+                                        </Info>
+                                    </Box>
+                                )
+                            }
+                            <button onClick={increaseTopIndex}>
+                                <GoNext/>
+                            </button>
+                        </Row2>
                     </AnimatePresence>
                 </Slider>
                 <AnimatePresence>
