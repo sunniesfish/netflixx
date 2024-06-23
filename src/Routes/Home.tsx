@@ -285,7 +285,7 @@ const GoNext = () => {
 }
 function Home() {
     const navigate = useNavigate();
-    const bigMovieMatch = useMatch("/movies/:movieId");
+    const bigMovieMatch = useMatch("/netflixx/movies/:movieId");
     const [ clickedMovie, setClickedMovie ] = useState<any>(null);
 
     const { data, isLoading } = useQuery<IGetResult>(["movies","nowPlaying"],getMovies);
@@ -349,7 +349,7 @@ function Home() {
 
     const toggleLeaving = () => setLeaving(prev => !prev);
     const onBoxClick = async (movieId:number) => {
-        navigate(`/movies/${movieId}`);
+        navigate(`/netflixx/movies/${movieId}`);
         const trailer:ITrailerResult = await getTrailerId(movieId, "movie");
         const detail:IDetail = await getDetail(movieId,"movie");
         setTimeout(() => {
@@ -362,7 +362,7 @@ function Home() {
             setClickedMovie(detail)
         }
     }
-    const onOverlayClick = () => navigate("/");
+    const onOverlayClick = () => navigate("/netflixx");
     useEffect(() => {
         const coverElement = document.querySelector(".bigCover");
         if (coverElement) {

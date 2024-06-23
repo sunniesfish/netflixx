@@ -116,8 +116,8 @@ function Header() {
     const [searchOpen, setSearchOpen] = useState(true);
     const navigate = useNavigate();
     
-    const homeMatch = useMatch("/");
-    const tvMatch = useMatch("/tv");
+    const homeMatch = useMatch("/netflixx");
+    const tvMatch = useMatch("/netflixx/tv");
 
     const inputAnimation = useAnimation();
     const navAnimation = useAnimation();
@@ -169,12 +169,12 @@ function Header() {
                 </Logo>
                 <Items>
                     <Item className="item">
-                        <Link to="/">
+                        <Link to="/netflixx">
                             Home{homeMatch && <Circle layoutId="circle"/>}
                         </Link>
                     </Item>
                     <Item className="item">
-                        <Link to="/tv">
+                        <Link to="/netflixx/tv">
                             Tv Shows{tvMatch && <Circle layoutId="circle"/>}
                         </Link>
                     </Item>

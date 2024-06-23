@@ -285,7 +285,7 @@ const GoNext = () => {
 }
 function Tv() {
     const navigate = useNavigate();
-    const bigTvMatch = useMatch("/tv/:tvId");
+    const bigTvMatch = useMatch("/netflixx/tv/:tvId");
     const [ clickedTv, setClickedTv ] = useState<any>(null);
 
     const { data, isLoading } = useQuery<IGetResult>(["tv","nowPlaying"],getTvs);
@@ -351,7 +351,7 @@ function Tv() {
 
     const toggleLeaving = () => setLeaving(prev => !prev);
     const onBoxClick = async (tvId:number) => {
-        navigate(`/tv/${tvId}`);
+        navigate(`/netflixx/tv/${tvId}`);
         const response:ITrailerResult = await getTrailerId(tvId, "tv");
         const detail:IDetail = await getDetail(tvId,"tv");
         setTimeout(() => {
@@ -365,7 +365,7 @@ function Tv() {
         }
     }
     const onOverlayClick = () => {
-        navigate("/tv");
+        navigate("/netflixx/tv");
     }
     useEffect(() => {
         const coverElement = document.querySelector(".bigCover");

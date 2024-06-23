@@ -9,11 +9,11 @@ function App() {
     <BrowserRouter>
       <Header/>
       <Routes>
-        <Route path="/search" element={<Search/>}/>
-        <Route path="/tv" element={<Tv/>}/>
-        <Route path="/tv/:tvId" element={<Tv/>}/>
-        <Route path="/movies/:movieId" element={<Home/>}/>
-        <Route path="/" element={<Home/>}/>
+        <Route path="/netflixx/search" element={<Search/>}/>
+        <Route path="/netflixx/tv" element={<Tv/>}/>
+        <Route path="/netflixx/tv/:tvId" element={<Tv/>}/>
+        <Route path="/netflixx/movies/:movieId" element={<Home/>}/>
+        <Route path="/netflixx" element={<Home/>}/>
       </Routes>
     </BrowserRouter>
   );
